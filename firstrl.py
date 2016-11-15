@@ -42,10 +42,9 @@ def make_map():
 
     # fill map with unblocked tiles
     map = [[Tile(True) 
-            for y in range(MAP_HEIGHT)] 
-                for x in range(MAP_WIDTH)]
+        for y in range(MAP_HEIGHT)] 
+            for x in range(MAP_WIDTH)]
 
-    # rooms
     rooms = []
     nr_of_rooms = 0
 
@@ -68,6 +67,8 @@ def make_map():
             create_room(new_room)
             # room center
             (new_x, new_y) = new_room.center()
+
+            # creation order helper
             room_no = Object(new_x, new_y, chr(65+nr_of_rooms), libtcod.white)
             objects.insert(0, room_no)
 
@@ -75,17 +76,17 @@ def make_map():
                 player.x = new_x
                 player.y = new_y
 
-                npc.x = new_x + 1
-                npc.y = new_y + 1
+                # npc.x = new_x + 1
+                # npc.y = new_y + 1
             else:
-                # @todo draw this part on paper
+                # @todo draw this part on paper !!!
                 # center coordinates of previous room
                 (prev_x, prev_y) = rooms[nr_of_rooms - 1].center()
 
                 if libtcod.random_get_int(0, 0, 1) == 1:
                     # horizontal -> vertical
                     create_h_tunnel(prev_x, new_x, prev_y)
-                    create_v_tunnel(prev_y, new_y, new_y)
+                    create_v_tunnel(prev_y, new_y, new_x)
                 else:
                     # vertical -> horizontal
                     create_v_tunnel(prev_y, new_y, prev_x)
