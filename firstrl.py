@@ -118,15 +118,18 @@ def render_all():
             wall = map[x][y].block_sight
 
             if not visible:
-                if wall:
-                    libtcod.console_set_char_background(con, x, y, color_dark_wall, libtcod.BKGND_SET)
-                else:
-                    libtcod.console_set_char_background(con, x, y, color_dark_ground, libtcod.BKGND_SET)
+                if map[x][y].explored:
+                    if wall:
+                        libtcod.console_set_char_background(con, x, y, color_dark_wall, libtcod.BKGND_SET)
+                    else:
+                        libtcod.console_set_char_background(con, x, y, color_dark_ground, libtcod.BKGND_SET)
             else:
                 if wall:
                     libtcod.console_set_char_background(con, x, y, color_light_wall, libtcod.BKGND_SET)
                 else:
                     libtcod.console_set_char_background(con, x, y, color_light_ground, libtcod.BKGND_SET)
+
+                map[x][y].explored = True
 
     for object in objects:
         object.draw()
@@ -180,6 +183,7 @@ class Object:
 class Tile:
     def __init__(self, blocked, block_sight = None):
         self.blocked = blocked
+        self.explored = False
 
         # by default, block_sight when blocked
         if block_sight is None: block_sight = blocked
