@@ -9,6 +9,7 @@ MAP_HEIGHT = 45
 ROOM_MAX_SIZE = 10
 ROOM_MIN_SIZE = 6
 MAX_ROOMS = 30
+MAX_ROOM_MONSTERS = 3
 
 FOV_ALGO = 0
 FOV_LIGHT_WALLS = True
@@ -78,15 +79,12 @@ def make_map():
             (new_x, new_y) = new_room.center()
 
             # creation order helper
-            room_no = Object(new_x, new_y, chr(65+nr_of_rooms), libtcod.white)
+            room_no = Object(new_x, new_y, chr(65+nr_of_rooms), 'room number', libtcod.white)
             objects.insert(0, room_no)
 
             if nr_of_rooms == 0:
                 player.x = new_x
                 player.y = new_y
-
-                # npc.x = new_x + 1
-                # npc.y = new_y + 1
             else:
                 # center coordinates of previous room
                 (prev_x, prev_y) = rooms[nr_of_rooms - 1].center()
@@ -100,6 +98,7 @@ def make_map():
                     create_v_tunnel(prev_y, new_y, prev_x)
                     create_h_tunnel(prev_x, new_x, new_y)
 
+            place_objects(new_room)
             rooms.append(new_room)
             nr_of_rooms += 1
 
@@ -160,15 +159,48 @@ def create_v_tunnel(y1, y2, x):
         map[x][y].blocked = False
         map[x][y].block_sight = False
 
+def place_objects(room):
+    num_monsters = libtcod.random_get_int(0, 0, MAX_ROOM_MONSTERS)
+
+    for i in range(num_monsters):
+        # choose random spot for this monster
+        x = libtcod.random_get_int(0, room.x1, room.x2)
+        y = libtcod.random_get_int(0, room.y1, room.y2)
+        # x = libtcod.random_get_int(0, room.x1 + 1, room.x2 - 1)
+        # y = libtcod.random_get_int(0, room.y1 + 1, room.y2 - 1)
+
+        if libtcod.random_get_int(0, 0, 100) < 80:
+            # 80% chance for orc
+            monster = Object(x, y, 'o', 'orc', libtcod.desaturated_green, True)
+        else:
+            # troll
+            monster = Object(x, y, 'T', 'troll', libtcod.darker_green, True)
+
+        if not is_blocked(x, y):
+            objects.append(monster)
+
+def is_blocked(x, y):
+    # test map
+    if map[x][y].blocked:
+        return True
+
+    for object in objects:
+        if object.blocks and object.x == x and object.y == y:
+            return True
+
+    return False
+
 class Object:
-    def __init__(self, x, y, char, color):
+    def __init__(self, x, y, char, name, color, blocks=False):
         self.x = x
         self.y = y
         self.char = char
         self.color = color
+        self.name = name
+        self.blocks = blocks
 
     def move(self, dx, dy):
-        if not map[self.x + dx][self.y + dy].blocked:
+        if not is_blocked(self.x + dx, self.y + dy):
             self.x += dx
             self.y += dy
 
@@ -213,9 +245,8 @@ libtcod.sys_set_fps(LIMIT_FPS)
 
 con = libtcod.console_new(SCREEN_WIDTH, SCREEN_HEIGHT)
 
-player = Object(25, 23, '@', libtcod.white)
-npc = Object(SCREEN_WIDTH/2 - 5, SCREEN_HEIGHT/2, '@', libtcod.yellow)
-objects = [npc, player]
+player = Object(25, 23, '@', 'player', libtcod.white, True)
+objects = [player]
 
 color_dark_wall = libtcod.Color(0, 0, 100)
 color_light_wall = libtcod.Color(130, 110, 50)
@@ -234,10 +265,8 @@ fov_recompute = True
 # main game loop
 while not libtcod.console_is_window_closed():
     render_all()
-
     libtcod.console_flush()
 
-    # libtcod.console_put_char(con, playerx, playery, ' ', libtcod.BKGND_NONE)
     for object in objects:
         object.clear()
 
