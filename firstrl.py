@@ -278,3 +278,9 @@ while not libtcod.console_is_window_closed():
     player_action = handle_keys()
     if player_action == 'exit':
         break
+
+    # monsters' turn
+    if game_state == 'playing' and player_action != 'didnt-take-turn':
+        for object in objects:
+            if object != player and object.name != 'room number':
+                print 'The ' + object.name + ' farts!'
