@@ -20,13 +20,13 @@ LIMIT_FPS = 20
 # movement
 
 def handle_keys():
-    global fov_recompute, game_state
+    # global fov_recompute, game_state
     # global playerx, playery
 
     # realtime
     # key = libtcod.console_check_for_keypress(True)
     # turn-based
-    key = libtcod.console_check_for_keypress(True)
+    key = libtcod.console_wait_for_keypress(True)
 
     if key.vk == libtcod.KEY_ENTER and key.lalt:
         libtcod.console_set_fullscreen(not libtcod.console_is_fullscreen())
@@ -36,17 +36,13 @@ def handle_keys():
 
     if game_state == 'playing':
         if libtcod.console_is_key_pressed(libtcod.KEY_UP):
-            player.move(0, -1)
-            fov_recompute = True
+            player_move_or_attack(0, -1)
         elif libtcod.console_is_key_pressed(libtcod.KEY_DOWN):
-            player.move(0, 1)
-            fov_recompute = True
+            player_move_or_attack(0, 1)
         elif libtcod.console_is_key_pressed(libtcod.KEY_LEFT):
-            player.move(-1, 0)
-            fov_recompute = True
+            player_move_or_attack(-1, 0)
         elif libtcod.console_is_key_pressed(libtcod.KEY_RIGHT):
-            player.move(1, 0)
-            fov_recompute = True
+            player_move_or_attack(1, 0)
         else:
             return 'didnt-take-turn'
 
@@ -82,8 +78,8 @@ def make_map():
             (new_x, new_y) = new_room.center()
 
             # creation order helper
-            room_no = Object(new_x, new_y, chr(65+nr_of_rooms), 'room number', libtcod.white)
-            objects.insert(0, room_no)
+            # room_no = Object(new_x, new_y, chr(65+nr_of_rooms), 'room number', libtcod.white)
+            # objects.insert(0, room_no)
 
             if nr_of_rooms == 0:
                 player.x = new_x
@@ -193,6 +189,26 @@ def is_blocked(x, y):
 
     return False
 
+def player_move_or_attack(dx, dy):
+    global fov_recompute
+
+    x = player.x + dx
+    y = player.y + dy
+
+    # is there a targer where we want to move?
+    target = None
+    for object in objects:
+        if object.x == x and object.y == y:
+            target = object
+            break;
+
+    # attack or move?
+    if target is not None:
+        print 'The ' + target.name +' laughs at you'
+    else:
+        player.move(dx, dy)
+        fov_recompute = True
+
 class Object:
     def __init__(self, x, y, char, name, color, blocks=False):
         self.x = x
@@ -280,7 +296,7 @@ while not libtcod.console_is_window_closed():
         break
 
     # monsters' turn
-    if game_state == 'playing' and player_action != 'didnt-take-turn':
-        for object in objects:
-            if object != player and object.name != 'room number':
-                print 'The ' + object.name + ' farts!'
+    # if game_state == 'playing' and player_action != 'didnt-take-turn':
+    #     for object in objects:
+    #         if object != player:
+    #             print 'The ' + object.name + ' takes turn'
